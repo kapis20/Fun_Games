@@ -76,11 +76,12 @@ def reset():
     snake_dir = "up"
 
     # create random obstacles each reset
-    obstacles = create_obstacles(count=12)
+    obstacles = create_obstacles(count=random.randint(5, 15))
     draw_obstacles()
 
     food_position = get_random_food_position()
     food.goto(food_position)
+  
 
     move_snake()
 
@@ -109,7 +110,7 @@ def create_obstacles(count=10):
     return list(obs)
 
 def draw_obstacles():
-    wall_pen.clearstamps()
+    wall_pen.clearstamps() # clear previous obstacles
     for (x, y) in obstacles:
         wall_pen.goto(x, y)
         wall_pen.stamp()
@@ -161,8 +162,12 @@ def move_snake():
     turtle.ontimer(move_snake, delay)
 
 def food_collision():
-    global food_position
+    global food_position, obstacles
     if get_distance(snake[-1], food_position) < 20:
+        # 1) NEW obstacles each time you eat
+        obstacles = create_obstacles(count=random.randint(5, 15))
+        draw_obstacles()  # clears old + draws new
+        # 2) NEW food position
         food_position = get_random_food_position()
         food.goto(food_position)
         return True
