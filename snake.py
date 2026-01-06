@@ -88,21 +88,26 @@ def on_click(x, y):
         reset()
 
 def reset():
-    global snake, snake_dir, food_position, obstacles, running
+    global snake, snake_dir, food_position, obstacles, running, lives
     running = True
     hide_game_over()
+
+    lives = 1          # <-- choose starting lives (e.g. 3 if you want)
+    draw_lives()
+
+    remove_extra_life()
+
     snake = [[0, 0], [0, 20], [0, 40], [0, 60], [0, 80]]
     snake_dir = "up"
 
-    # create random obstacles each reset
     obstacles = create_obstacles(count=random.randint(5, 15))
     draw_obstacles()
 
     food_position = get_random_food_position()
     food.goto(food_position)
-  
 
     move_snake()
+
 
 def create_obstacles(count=10):
     """Return a list of (x, y) obstacle positions aligned to the grid."""
@@ -208,6 +213,42 @@ def life_collision():
 
     return False
 
+def lose_life():
+    global lives, running
+
+    lives -= 1
+    draw_lives()
+
+    # remove any heart currently on screen so it doesn't carry over
+    remove_extra_life()
+
+    if lives <= 0:
+        running = False
+        show_game_over()
+        screen.update()
+        return
+
+    # still have lives -> respawn snake (but don't reset lives)
+    respawn_snake()
+
+
+def respawn_snake():
+    global snake, snake_dir, running
+
+    running = True
+    snake = [[0, 0], [0, 20], [0, 40], [0, 60], [0, 80]]
+    snake_dir = "up"
+
+    # redraw snake immediately (optional but feels better)
+    pen.clearstamps()
+    for segment in snake:
+        pen.goto(segment[0], segment[1])
+        pen.stamp()
+    screen.update()
+
+    move_snake()
+
+
 def move_snake():
     global snake_dir, running
     if not running:
@@ -233,16 +274,12 @@ def move_snake():
 
     # collision with self
     if new_head in snake[:-1]:
-        running = False
-        show_game_over()
-        screen.update()
+        lose_life()
         return
 
     # collision with obstacles
     if (new_head[0], new_head[1]) in obstacles:
-        running = False
-        show_game_over()    
-        screen.update()
+        lose_life()
         return
 
     snake.append(new_head)
