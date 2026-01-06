@@ -20,7 +20,37 @@ def reset():
     food_position = get_random_food_position()
     food.goto(food_position)
     move_snake()
-     
+
+def create_obstacles(count=10):
+    """Return a list of (x, y) obstacle positions aligned to the grid."""
+    obs = set()
+    attempts = 0
+    max_attempts = 5000
+
+    while len(obs) < count and attempts < max_attempts:
+        attempts += 1
+        x = random.randint(int(-w/2 + cell), int(w/2 - cell))
+        y = random.randint(int(-h/2 + cell), int(h/2 - cell))
+
+        # snap to grid
+        x = (x // cell) * cell
+        y = (y // cell) * cell
+        pos = (x, y)
+
+        # don't place on snake start
+        if list(pos) in snake:
+            continue
+
+        obs.add(pos)
+
+    return list(obs)
+
+def draw_obstacles():
+    wall_pen.clearstamps()
+    for (x, y) in obstacles:
+        wall_pen.goto(x, y)
+        wall_pen.stamp()
+
 def move_snake():
     global snake_dir
  
@@ -109,9 +139,14 @@ screen.tracer(0)
  
  
 pen = turtle.Turtle("square")
+pen.color("green")
 pen.penup()
  
- 
+# obstacle pen
+wall_pen = turtle.Turtle("square")
+wall_pen.color("white")
+wall_pen.penup() 
+
 food = turtle.Turtle()
 food.shape("square")
 food.color("yellow")
