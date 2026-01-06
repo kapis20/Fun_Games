@@ -18,7 +18,7 @@ button_rect = None  # (x1, y1, x2, y2)
 
 ui = turtle.Turtle(visible=False)
 ui.penup()
-ui.color("white")
+ui.color("red")
 
 btn = turtle.Turtle(visible=False)
 btn.penup()
@@ -214,7 +214,7 @@ def go_left():
 screen = turtle.Screen()
 screen.setup(w, h)
 screen.title("Snake")
-screen.bgcolor("blue")
+screen.bgcolor("lightblue")
 screen.tracer(0)
 
 screen.onclick(on_click)
@@ -229,7 +229,7 @@ wall_pen.color("white")
 wall_pen.penup()
 
 food = turtle.Turtle("square")
-food.color("yellow")
+food.color("darkorange")
 food.shapesize(food_size / 20)
 food.penup()
 
