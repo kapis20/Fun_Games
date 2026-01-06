@@ -13,9 +13,65 @@ offsets = {
     "left": (-cell, 0),
     "right": (cell, 0)
 }
+running = True
+button_rect = None  # (x1, y1, x2, y2)
+
+ui = turtle.Turtle(visible=False)
+ui.penup()
+ui.color("white")
+
+btn = turtle.Turtle(visible=False)
+btn.penup()
+btn.color("black")
+def show_game_over():
+    global button_rect
+
+    # text
+    ui.clear()
+    ui.goto(0, 40)
+    ui.write("GAME OVER", align="center", font=("Arial", 28, "bold"))
+    ui.goto(0, 10)
+    ui.write("Click RESET to play again", align="center", font=("Arial", 14, "normal"))
+
+    # button (draw a filled rectangle + text)
+    btn.clear()
+    btn.goto(-70, -60)
+    btn.pendown()
+    btn.fillcolor("white")
+    btn.begin_fill()
+    for _ in range(2):
+        btn.forward(140)
+        btn.right(90)
+        btn.forward(45)
+        btn.right(90)
+    btn.end_fill()
+    btn.penup()
+
+    btn.goto(0, -92)
+    btn.color("black")
+    btn.write("RESET", align="center", font=("Arial", 16, "bold"))
+
+    # clickable area: left, top, right, bottom
+    button_rect = (-70, -60, 70, -105)
+
+def hide_game_over():
+    global button_rect
+    ui.clear()
+    btn.clear()
+    button_rect = None
+
+def on_click(x, y):
+    # if game over and click is inside button -> reset
+    if button_rect is None:
+        return
+    x1, y1, x2, y2 = button_rect
+    if x1 <= x <= x2 and y2 <= y <= y1:
+        reset()
 
 def reset():
-    global snake, snake_dir, food_position, obstacles
+    global snake, snake_dir, food_position, obstacles, running
+    running = True
+    hide_game_over()
     snake = [[0, 0], [0, 20], [0, 40], [0, 60], [0, 80]]
     snake_dir = "up"
 
@@ -59,7 +115,9 @@ def draw_obstacles():
         wall_pen.stamp()
 
 def move_snake():
-    global snake_dir
+    global snake_dir, running
+    if not running:
+        return
 
     new_head = snake[-1].copy()
     new_head[0] += offsets[snake_dir][0]
@@ -77,12 +135,16 @@ def move_snake():
 
     # collision with self
     if new_head in snake[:-1]:
-        reset()
+        running = False
+        show_game_over()
+        screen.update()
         return
 
     # collision with obstacles
     if (new_head[0], new_head[1]) in obstacles:
-        reset()
+        running = False
+        show_game_over()    
+        screen.update()
         return
 
     snake.append(new_head)
@@ -154,6 +216,8 @@ screen.setup(w, h)
 screen.title("Snake")
 screen.bgcolor("blue")
 screen.tracer(0)
+
+screen.onclick(on_click)
 
 pen = turtle.Turtle("square")
 pen.color("green")
