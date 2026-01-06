@@ -148,10 +148,16 @@ class SnakeGame(Widget):
             self._life_despawn_ev = None
 
     def maybe_spawn_extra_life(self):
+        '''
+        Randomly spawn an extra-life heart.
+        '''
+        # already active?
         if self.life_active:
             return
+        # probability check
         if random.random() > self.life_spawn_chance:
             return
+        # spawn it now    
         self.life_pos = self.random_free_cell()
         self.life_active = True
         self._life_despawn_ev = Clock.schedule_once(
@@ -248,8 +254,8 @@ class SnakeGame(Widget):
         self.canvas.clear()
         with self.canvas:
             # background (optional)
-            # Color(0.68, 0.85, 0.90, 1)  # light blue
-            # Rectangle(pos=self.pos, size=self.size)
+            Color(0.68, 0.85, 0.90, 1)  # light blue
+            Rectangle(pos=self.pos, size=self.size)
 
             # obstacles
             Color(1, 1, 1, 1)
