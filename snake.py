@@ -16,6 +16,24 @@ offsets = {
 running = True
 button_rect = None  # (x1, y1, x2, y2)
 
+# lives system
+lives = 1
+max_lives = 5
+
+life_active = False
+life_position = None
+
+life = turtle.Turtle()
+life.shape("triangle")        
+life.color("red")
+life.penup()
+life.hideturtle()
+
+lives_ui = turtle.Turtle(visible=False)
+lives_ui.penup()
+lives_ui.color("white")
+
+
 ui = turtle.Turtle(visible=False)
 ui.penup()
 ui.color("red")
@@ -23,6 +41,7 @@ ui.color("red")
 btn = turtle.Turtle(visible=False)
 btn.penup()
 btn.color("black")
+
 def show_game_over():
     global button_rect
 
@@ -115,11 +134,89 @@ def draw_obstacles():
         wall_pen.goto(x, y)
         wall_pen.stamp()
 
+
+def draw_lives():
+    lives_ui.clear()
+    lives_ui.goto(-w//2 + 10, h//2 - 30)
+    lives_ui.write(f"Lives: {lives}", align="left", font=("Arial", 14, "bold"))
+
+
+def get_random_free_cell():
+    while True:
+        x = random.randint(int(-w/2 + cell), int(w/2 - cell))
+        y = random.randint(int(-h/2 + cell), int(h/2 - cell))
+
+        x = (x // cell) * cell
+        y = (y // cell) * cell
+        pos = (x, y)
+
+        if [x, y] in snake:
+            continue
+        if pos in obstacles:
+            continue
+        if pos == food_position:
+            continue
+
+        return pos
+
+def remove_extra_life():
+    global life_active, life_position
+    life_active = False
+    life_position = None
+    life.hideturtle()
+
+
+def extra_life(chance=0.25, despawn_ms=6000):
+    """
+    Randomly spawn an extra-life heart.
+    - chance: probability to spawn (0.0 to 1.0)
+    - despawn_ms: how long it stays on screen
+    """
+    global life_active, life_position
+
+    # don't spawn a second heart if one is already active
+    if life_active:
+        return
+
+    # probability check
+    if random.random() > chance:
+        return
+
+    # pick a free grid cell
+    life_position = get_random_free_cell()
+
+    # show it
+    life.goto(life_position)
+    life.showturtle()
+    life_active = True
+
+    # auto-remove after time
+    turtle.ontimer(remove_extra_life, despawn_ms)
+
+def life_collision():
+    global lives
+
+    if not life_active or life_position is None:
+        return False
+
+    if get_distance(snake[-1], life_position) < 20:
+        if lives < max_lives:
+            lives += 1
+            draw_lives()
+        remove_extra_life()
+        return True
+
+    return False
+
 def move_snake():
     global snake_dir, running
     if not running:
         return
 
+    # check for extra life collision
+    life_collision()
+
+    # move snake head
     new_head = snake[-1].copy()
     new_head[0] += offsets[snake_dir][0]
     new_head[1] += offsets[snake_dir][1]
@@ -164,12 +261,18 @@ def move_snake():
 def food_collision():
     global food_position, obstacles
     if get_distance(snake[-1], food_position) < 20:
+
         # 1) NEW obstacles each time you eat
         obstacles = create_obstacles(count=random.randint(5, 15))
         draw_obstacles()  # clears old + draws new
         # 2) NEW food position
         food_position = get_random_food_position()
         food.goto(food_position)
+
+        # 3) chance to spawn extra life
+        # 30% chance, despawn after 8 seconds
+        extra_life(chance=0.3, despawn_ms=8000) 
+
         return True
     return False
 
